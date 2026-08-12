@@ -32,17 +32,44 @@ jobs:
         run: python3 tools/build_datapack.py
       - name: Validate release datapack
         run: python3 tools/validate_release.py
+      - name: Package datapack as v1.2.0
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, tempfile, zipfile
+          src = Path('dist/ImPulsCore_Datapack_v1.0.0.zip')
+          dst = Path('dist/ImPulsCore_Datapack_v1.2.0.zip')
+          with tempfile.TemporaryDirectory() as td:
+              root = Path(td)
+              with zipfile.ZipFile(src) as z:
+                  z.extractall(root)
+              mcmeta = root / 'pack.mcmeta'
+              data = json.loads(mcmeta.read_text(encoding='utf-8'))
+              data['pack']['description'] = 'ImPulsCore v1.2.0 — wall, 32 gates and sanitary-zone waves'
+              mcmeta.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+              with zipfile.ZipFile(dst, 'w', zipfile.ZIP_DEFLATED) as z:
+                  for p in sorted(root.rglob('*')):
+                      if p.is_file():
+                          z.write(p, p.relative_to(root))
+          with zipfile.ZipFile(dst) as z:
+              assert z.testzip() is None
+              assert 'pack.mcmeta' in z.namelist()
+          PY
       - name: Build ImPulsCore plugin
         run: mvn -B -f plugin/pom.xml clean package
-      - name: Verify JAR
-        run: test -s plugin/target/ImPulsCore-1.0.0.jar
+      - name: Verify v1.2 JAR and entrypoint
+        run: |
+          test -s plugin/target/ImPulsCore-1.2.0.jar
+          jar tf plugin/target/ImPulsCore-1.2.0.jar | grep -q 'ru/impuls/core/ImPulsCoreV11Plugin.class'
+          unzip -p plugin/target/ImPulsCore-1.2.0.jar plugin.yml | grep -q "version: '1.2.0'"
+          unzip -p plugin/target/ImPulsCore-1.2.0.jar plugin.yml | grep -q 'main: ru.impuls.core.ImPulsCoreV11Plugin'
       - name: Assemble checksums
         run: |
           mkdir -p release
-          cp dist/ImPulsCore_Datapack_v1.0.0.zip release/
-          cp plugin/target/ImPulsCore-1.0.0.jar release/
+          cp dist/ImPulsCore_Datapack_v1.2.0.zip release/
+          cp plugin/target/ImPulsCore-1.2.0.jar release/
           (cd release && sha256sum * > SHA256SUMS.txt)
       - uses: actions/upload-artifact@v4
         with:
-          name: ImPuls-v1.0.0
+          name: ImPuls-v1.2.0
           path: release/
