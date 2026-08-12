@@ -1,27 +1,19 @@
-# Minecraft runtime / generated files
+# Minecraft runtime
 world/
 world_nether/
 world_the_end/
 logs/
 cache/
-crash-reports/
+plugins/*.jar
+!dist/*.jar
 *.log
-*.lck
-
-# Server binaries
-*.jar
-
-# Backups
-backups/
+*.tmp
 *.bak
-
-# Secrets / local environment
-.env
-.env.*
-!.env.example
-
-# OS / editors
-.DS_Store
-Thumbs.db
+# build
+plugin/target/
+plugin/.gradle/
+plugin/build/
+# IDE
 .idea/
 .vscode/
+*.iml

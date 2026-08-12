@@ -1,0 +1,12 @@
+database:
+  file: impuls.sqlite3
+economy:
+  insurance-base-cost: 250
+  vip-flight-cost-per-minute: 2
+  guild-create-cost: 1500
+  claim-32-cost: 500
+  vip-claim-cost: 5000
+dungeon:
+  cooldown-hours: 4
+  min-floors: 5
+  max-floors: 10

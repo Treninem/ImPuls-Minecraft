@@ -1,0 +1,15 @@
+name: ImPulsCore
+version: '1.0.0'
+main: ru.impuls.core.ImPulsCorePlugin
+api-version: '1.21.11'
+author: Treninem
+description: Core mechanics for ImPuls RPG server
+commands:
+  impuls:
+    description: Main ImPuls command
+    usage: /impuls help
+permissions:
+  impuls.admin:
+    default: op
+  impuls.vip:
+    default: false
