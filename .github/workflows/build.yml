@@ -14,6 +14,20 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+      - name: Repair recovered v0.9.0 archive
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, hashlib
+          p=Path('archives/ImPulsCore_Datapack_v0.9.0.zip')
+          expected='1329b8c2181b688eda67a688b7a0a96714769173ac682633363645eeb78f27ae'
+          raw=p.read_bytes()
+          if hashlib.sha256(raw).hexdigest()!=expected:
+              suffix=base64.b64decode(Path('archives/ImPulsCore_Datapack_v0.9.0.suffix.b64').read_text().strip())
+              raw += suffix
+              p.write_bytes(raw)
+          assert hashlib.sha256(p.read_bytes()).hexdigest()==expected, 'v0.9.0 checksum mismatch'
+          PY
       - name: Build datapack from recovered v0.9.0
         run: python3 tools/build_datapack.py
       - name: Validate release datapack
