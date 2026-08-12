@@ -1,3 +1,14 @@
-# CI recovery
+# Восстановление v0.9.0 в CI
 
-The recovered v0.9.0 ZIP was truncated during connector binary upload. CI repairs the exact original bytes before build and verifies SHA-256 `1329b8c2181b688eda67a688b7a0a96714769173ac682633363645eeb78f27ae`.
+Исходный архив v0.9.0 хранится не бинарным ZIP, а четырьмя Base64-частями, потому что первая бинарная передача через коннектор была повреждена.
+
+Рабочие части:
+- `ImPulsCore_Datapack_v0.9.0.full.part01.b64`
+- `ImPulsCore_Datapack_v0.9.0.full.part02.b64`
+- `ImPulsCore_Datapack_v0.9.0.full.part31.b64`
+- `ImPulsCore_Datapack_v0.9.0.full.part32.b64`
+
+CI объединяет их, декодирует в ZIP и требует SHA-256:
+`1329b8c2181b688eda67a688b7a0a96714769173ac682633363645eeb78f27ae`.
+
+Только после совпадения контрольной суммы разрешены сборка v1.0.0 и Maven-компиляция плагина.
