@@ -19,10 +19,9 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import base64, hashlib
-          parts = []
-          for i in (1, 2, 3):
-              parts.append(Path(f'archives/ImPulsCore_Datapack_v0.9.0.full.part{i:02d}.b64').read_text().strip())
-          raw = base64.b64decode(''.join(parts))
+          names = ['part01', 'part02', 'part31', 'part32']
+          text = ''.join(Path(f'archives/ImPulsCore_Datapack_v0.9.0.full.{name}.b64').read_text().strip() for name in names)
+          raw = base64.b64decode(text)
           expected = '1329b8c2181b688eda67a688b7a0a96714769173ac682633363645eeb78f27ae'
           actual = hashlib.sha256(raw).hexdigest()
           assert actual == expected, f'v0.9.0 checksum mismatch: {actual}'
