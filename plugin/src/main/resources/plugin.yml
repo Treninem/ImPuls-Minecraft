@@ -1,13 +1,14 @@
 name: ImPulsCore
-version: '1.0.0'
-main: ru.impuls.core.ImPulsCorePlugin
-api-version: '1.21.11'
+version: '1.2.0'
+main: ru.impuls.core.ImPulsCoreV11Plugin
+api-version: '1.21'
 author: Treninem
-description: Core mechanics for ImPuls RPG server
+description: ImPuls survival RPG core v1.2
 commands:
   impuls:
     description: Main ImPuls command
     usage: /impuls help
+    aliases: [imp]
 permissions:
   impuls.admin:
     default: op
