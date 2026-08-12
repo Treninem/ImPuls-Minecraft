@@ -34,6 +34,15 @@ public final class WarService {
     }
 
     public void startTicker() {
+        if (plugin.getConfig().getBoolean("features.city-events", true)) {
+            CityEventService.start(plugin, db);
+        }
+        if (plugin.getConfig().getBoolean("features.world-expansion", true)) {
+            WorldExpansionService.start(plugin, db);
+        }
+        if (plugin.getConfig().getBoolean("features.region-discovery", true)) {
+            RegionDiscoveryService.start(plugin, db);
+        }
         Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20L * 10, 20L * 10);
     }
 
