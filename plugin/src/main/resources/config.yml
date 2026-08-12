@@ -1,12 +1,35 @@
 database:
   file: impuls.sqlite3
+
+features:
+  city-events: true
+  world-expansion: true
+  region-discovery: true
+
 economy:
-  insurance-base-cost: 250
+  insurance-base-cost: 120
+  insurance-min-cost: 100
+  insurance-max-cost: 10000
   vip-flight-cost-per-minute: 2
   guild-create-cost: 1500
   claim-32-cost: 500
   vip-claim-cost: 5000
+  claim-expand-cost-per-strip-block: 20
+  claim-sale-fee: 0.05
+
+claims:
+  normal-inactivity-days: 60
+  vip-inactivity-days: 120
+
 dungeon:
   cooldown-hours: 4
   min-floors: 5
   max-floors: 10
+
+war:
+  max-member-difference: 1
+  max-average-rank-difference: 1.5
+  kill-target: 20
+  duration-minutes: 15
+  treasury-capture-fraction: 0.10
+  capture-cooldown-days: 7
