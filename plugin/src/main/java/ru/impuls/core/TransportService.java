@@ -49,6 +49,9 @@ public final class TransportService implements Listener {
 
     public static void start(JavaPlugin plugin, Database db) {
         Bukkit.getPluginManager().registerEvents(new TransportService(plugin, db), plugin);
+        if (plugin.getConfig().getBoolean("features.city-protection", true)) CityProtectionService.start(plugin, db);
+        if (plugin.getConfig().getBoolean("features.city-npcs", true)) CityNpcService.start(plugin, db);
+        if (plugin.getConfig().getBoolean("features.world-bosses", true)) WorldBossService.start(plugin, db);
     }
 
     @EventHandler
