@@ -28,51 +28,54 @@ jobs:
           Path('archives/ImPulsCore_Datapack_v0.9.0.zip').write_bytes(raw)
           print(f'restored={len(raw)} sha256={actual}')
           PY
-      - name: Build datapack from recovered v0.9.0
-        run: python3 tools/build_datapack.py
-      - name: Validate release datapack
-        run: python3 tools/validate_release.py
+      - name: Build and validate datapack
+        run: |
+          python3 tools/build_datapack.py
+          python3 tools/validate_release.py
       - name: Package datapack as v1.3.0
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import json, tempfile, zipfile
-          src = Path('dist/ImPulsCore_Datapack_v1.0.0.zip')
-          dst = Path('dist/ImPulsCore_Datapack_v1.3.0.zip')
+          src=Path('dist/ImPulsCore_Datapack_v1.0.0.zip'); dst=Path('dist/ImPulsCore_Datapack_v1.3.0.zip')
           with tempfile.TemporaryDirectory() as td:
-              root = Path(td)
-              with zipfile.ZipFile(src) as z:
-                  z.extractall(root)
-              mcmeta = root / 'pack.mcmeta'
-              data = json.loads(mcmeta.read_text(encoding='utf-8'))
-              data['pack']['description'] = 'ImPulsCore v1.3.0 — wall, 32 gates, waves, RPG progression, capital and realms'
-              mcmeta.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-              with zipfile.ZipFile(dst, 'w', zipfile.ZIP_DEFLATED) as z:
+              root=Path(td)
+              with zipfile.ZipFile(src) as z: z.extractall(root)
+              mcmeta=root/'pack.mcmeta'; data=json.loads(mcmeta.read_text(encoding='utf-8'))
+              data['pack']['description']='ImPulsCore v1.3.0 — wall, 32 gates, RPG, capital, realms and economy'
+              mcmeta.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+              with zipfile.ZipFile(dst,'w',zipfile.ZIP_DEFLATED) as z:
                   for p in sorted(root.rglob('*')):
-                      if p.is_file(): z.write(p, p.relative_to(root))
-          with zipfile.ZipFile(dst) as z:
-              assert z.testzip() is None
-              assert 'pack.mcmeta' in z.namelist()
+                      if p.is_file(): z.write(p,p.relative_to(root))
+          with zipfile.ZipFile(dst) as z: assert z.testzip() is None and 'pack.mcmeta' in z.namelist()
           PY
       - name: Build ImPulsCore plugin
         run: mvn -B -f plugin/pom.xml clean package
-      - name: Verify v1.3 JAR and gameplay services
+      - name: Verify every active v1.3 service
         run: |
           JAR=plugin/target/ImPulsCore-1.3.0.jar
           test -s "$JAR"
-          for CLASS in ImPulsCoreV11Plugin ProgressionQuestService TransportService CapitalExpansionService CityProtectionService CityNpcService WorldBossService ItemLifecycleService MarketService ArenaMinigameService RealmExpansionService ProfessionEconomyService GuildExpansionService; do
+          for CLASS in \
+            ImPulsCoreV11Plugin ProgressionQuestService TransportService CapitalExpansionService \
+            CityProtectionService CityNpcService WorldBossService ItemLifecycleService MarketService \
+            ArenaMinigameService RealmExpansionService ProfessionEconomyService GuildExpansionService \
+            ExtendedFeatureService DuelInsuranceGuardService CityChallengeService LeaderboardDiagnosticsService \
+            DungeonSharedLootService BackupService CityDistrictExpansionService VipLeakGuardService RoyalEstateService; do
             jar tf "$JAR" | grep -q "ru/impuls/core/${CLASS}.class"
           done
           unzip -p "$JAR" plugin.yml | grep -q "version: '1.3.0'"
-          for FLAG in progression city-protection market duels realm-expansion professions guild-expansion; do
+          for FLAG in \
+            progression transport item-lifecycle capital-expansion city-protection city-npcs world-bosses \
+            market duels realm-expansion professions guild-expansion duel-insurance-guard city-challenges \
+            leaderboards dungeon-shared-loot backups city-districts vip-leak-guard royal-estate; do
             unzip -p "$JAR" config.yml | grep -q "${FLAG}: true"
           done
       - name: Assemble checksums
         run: |
-          mkdir -p release
+          rm -rf release && mkdir release
           cp dist/ImPulsCore_Datapack_v1.3.0.zip release/
           cp plugin/target/ImPulsCore-1.3.0.jar release/
-          (cd release && sha256sum * > SHA256SUMS.txt)
+          (cd release && sha256sum ImPulsCore_Datapack_v1.3.0.zip ImPulsCore-1.3.0.jar > SHA256SUMS.txt)
       - uses: actions/upload-artifact@v4
         with:
           name: ImPuls-v1.3.0
