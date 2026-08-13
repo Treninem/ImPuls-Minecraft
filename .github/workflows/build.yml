@@ -59,14 +59,15 @@ jobs:
             ImPulsCoreV11Plugin ProgressionQuestService TransportService CapitalExpansionService \
             CityProtectionService CityNpcService WorldBossService ItemLifecycleService MarketService \
             ArenaMinigameService RealmExpansionService ProfessionEconomyService GuildExpansionService \
-            ExtendedFeatureService DuelInsuranceGuardService CityChallengeService LeaderboardDiagnosticsService \
-            DungeonSharedLootService BackupService CityDistrictExpansionService VipLeakGuardService RoyalEstateService; do
+            ExtendedFeatureService HelpCommandService DuelInsuranceGuardService CityChallengeService \
+            LeaderboardDiagnosticsService DungeonSharedLootService BackupService CityDistrictExpansionService \
+            VipLeakGuardService RoyalEstateService; do
             jar tf "$JAR" | grep -q "ru/impuls/core/${CLASS}.class"
           done
           unzip -p "$JAR" plugin.yml | grep -q "version: '1.3.0'"
           for FLAG in \
             progression transport item-lifecycle capital-expansion city-protection city-npcs world-bosses \
-            market duels realm-expansion professions guild-expansion duel-insurance-guard city-challenges \
+            market duels realm-expansion professions guild-expansion help-menu duel-insurance-guard city-challenges \
             leaderboards dungeon-shared-loot backups city-districts vip-leak-guard royal-estate; do
             unzip -p "$JAR" config.yml | grep -q "${FLAG}: true"
           done
