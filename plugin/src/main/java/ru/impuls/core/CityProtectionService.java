@@ -48,6 +48,7 @@ public final class CityProtectionService implements Listener {
         Block block = event.getBlockPlaced();
         if (!protectedBuildArea(block.getLocation())) return;
         if (insideOwnClaim(event.getPlayer(), block.getLocation()) && !isRoyal(block.getLocation()) && !isSanitaryOnly(block.getLocation())) return;
+        if (GuildExpansionService.canBuildGuildBase(event.getPlayer(), block.getLocation()) && !isRoyal(block.getLocation()) && !isSanitaryOnly(block.getLocation())) return;
         event.setCancelled(true);
         event.getPlayer().sendMessage(ChatColor.RED + "[ImPuls] Здесь действует защита столицы/санитарной/королевской зоны.");
     }
@@ -58,6 +59,7 @@ public final class CityProtectionService implements Listener {
         Location at = event.getBlock().getLocation();
         if (!protectedBuildArea(at)) return;
         if (insideOwnClaim(event.getPlayer(), at) && !isRoyal(at) && !isSanitaryOnly(at)) return;
+        if (GuildExpansionService.canBuildGuildBase(event.getPlayer(), at) && !isRoyal(at) && !isSanitaryOnly(at)) return;
         event.setCancelled(true);
         event.getPlayer().sendMessage(ChatColor.RED + "[ImPuls] Системные территории столицы защищены.");
     }
@@ -92,7 +94,6 @@ public final class CityProtectionService implements Listener {
     public void onSpawn(CreatureSpawnEvent event) {
         if (!(event.getEntity() instanceof Monster)) return;
         if (!isCity(event.getLocation())) return;
-        // Explicit ImPuls scripted entities are allowed; ordinary hostile city spawns are not.
         if (event.getEntity().getScoreboardTags().contains("impuls_wave") || event.getEntity().getScoreboardTags().contains("impuls_rank_trial")) return;
         event.setCancelled(true);
     }
