@@ -17,6 +17,14 @@ features:
   realm-expansion: true
   professions: true
   guild-expansion: true
+  duel-insurance-guard: true
+  city-challenges: true
+  leaderboards: true
+  dungeon-shared-loot: true
+  backups: true
+  city-districts: true
+  vip-leak-guard: true
+  royal-estate: true
 
 economy:
   insurance-base-cost: 120
@@ -76,3 +84,7 @@ professions:
 guild-base:
   base-cost: 10000
   expand-cost-per-block: 250
+
+backups:
+  interval-hours: 6
+  keep: 8
