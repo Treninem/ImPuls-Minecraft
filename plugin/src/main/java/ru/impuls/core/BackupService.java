@@ -2,7 +2,6 @@ package ru.impuls.core;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -11,7 +10,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -24,7 +22,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.Locale;
 
-/** Small local data backups supplementing host-level world backups. */
+/** Small local SQLite backups supplementing host-level full-world backups. */
 public final class BackupService implements Listener {
     private final JavaPlugin plugin;
     private final File database;
@@ -69,7 +67,7 @@ public final class BackupService implements Listener {
             case "status" -> {
                 File latest = latest();
                 player.sendMessage(ChatColor.GOLD + "Backup ImPuls: " + ChatColor.GRAY + (latest == null ? "локальных копий ещё нет" : latest.getName() + " | " + latest.length() / 1024 + " KiB"));
-                player.sendMessage(ChatColor.GRAY + "Локальная копия защищает SQLite. Мир целиком дополнительно резервируется средствами хостинга перед обновлениями.");
+                player.sendMessage(ChatColor.GRAY + "Локальная копия защищает SQLite. Полный мир резервируй штатным backup хостинга перед обновлениями.");
             }
             default -> player.sendMessage("/impuls backup status|create|verify");
         }
@@ -82,9 +80,6 @@ public final class BackupService implements Listener {
 
     private File createBackup() {
         if (!database.exists()) return null;
-        try {
-            for (World world : Bukkit.getWorlds()) world.save();
-        } catch (Throwable ignored) { }
         String stamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").withZone(ZoneOffset.UTC).format(Instant.now());
         File out = new File(backupDir, "impuls-" + stamp + ".sqlite3");
         String escaped = out.getAbsolutePath().replace("'", "''");
@@ -98,6 +93,7 @@ public final class BackupService implements Listener {
         }
         if (!verify(out)) {
             plugin.getLogger().warning("SQLite backup integrity verification failed: " + out.getName());
+            try { Files.deleteIfExists(out.toPath()); } catch (Exception ignored) { }
             return null;
         }
         prune();
