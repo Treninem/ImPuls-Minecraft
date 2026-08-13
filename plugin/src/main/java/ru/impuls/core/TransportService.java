@@ -54,6 +54,8 @@ public final class TransportService implements Listener {
         if (plugin.getConfig().getBoolean("features.world-bosses", true)) WorldBossService.start(plugin, db);
         if (plugin.getConfig().getBoolean("features.market", true)) MarketService.start(plugin, db);
         if (plugin.getConfig().getBoolean("features.duels", true)) ArenaMinigameService.start(plugin, db);
+        if (plugin.getConfig().getBoolean("features.realm-expansion", true)) RealmExpansionService.start(plugin, db);
+        if (plugin.getConfig().getBoolean("features.professions", true)) ProfessionEconomyService.start(plugin, db);
     }
 
     @EventHandler
