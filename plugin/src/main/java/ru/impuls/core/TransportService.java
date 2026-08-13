@@ -49,6 +49,7 @@ public final class TransportService implements Listener {
 
     public static void start(JavaPlugin plugin, Database db) {
         Bukkit.getPluginManager().registerEvents(new TransportService(plugin, db), plugin);
+        if (plugin.getConfig().getBoolean("features.guild-expansion", true)) GuildExpansionService.start(plugin, db);
         if (plugin.getConfig().getBoolean("features.city-protection", true)) CityProtectionService.start(plugin, db);
         if (plugin.getConfig().getBoolean("features.city-npcs", true)) CityNpcService.start(plugin, db);
         if (plugin.getConfig().getBoolean("features.world-bosses", true)) WorldBossService.start(plugin, db);
@@ -126,9 +127,7 @@ public final class TransportService implements Listener {
 
     @EventHandler
     public void onDamage(EntityDamageEvent event) {
-        if (event.getEntity() instanceof Player player && pending.containsKey(player.getUniqueId())) {
-            cancel(player, "Перемещение отменено: получен урон.");
-        }
+        if (event.getEntity() instanceof Player player && pending.containsKey(player.getUniqueId())) cancel(player, "Перемещение отменено: получен урон.");
     }
 
     private void cancel(Player player, String message) {
@@ -149,9 +148,7 @@ public final class TransportService implements Listener {
         int y = Math.max(world.getMinHeight() + 2, world.getHighestBlockYAt(point.x, point.z) + 1);
         Location location = new Location(world, point.x + 0.5, y, point.z + 0.5);
         Material below = world.getBlockAt(point.x, y - 1, point.z).getType();
-        if (below.isAir() || below == Material.WATER || below == Material.LAVA) {
-            world.getBlockAt(point.x, y - 1, point.z).setType(Material.SMOOTH_STONE, false);
-        }
+        if (below.isAir() || below == Material.WATER || below == Material.LAVA) world.getBlockAt(point.x, y - 1, point.z).setType(Material.SMOOTH_STONE, false);
         return location;
     }
 }
