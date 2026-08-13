@@ -17,6 +17,7 @@ features:
   realm-expansion: true
   professions: true
   guild-expansion: true
+  help-menu: true
   duel-insurance-guard: true
   city-challenges: true
   leaderboards: true
