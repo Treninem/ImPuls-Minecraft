@@ -14,6 +14,8 @@ features:
   world-bosses: true
   market: true
   duels: true
+  realm-expansion: true
+  professions: true
 
 economy:
   insurance-base-cost: 120
@@ -65,3 +67,7 @@ market:
 duel:
   reward-coins: 60
   pair-reward-cooldown-seconds: 3600
+
+professions:
+  daily-activity-cap: 500
+  daily-buyback-cap: 1000
