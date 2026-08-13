@@ -106,8 +106,19 @@ public final class RoyalEstateService implements Listener, AutoCloseable {
     private void secretRoom(int cx,int y,int cz){for(int x=-8;x<=8;x++)for(int z=-8;z<=8;z++){add(cx+x,y,cz+z,Material.POLISHED_DEEPSLATE);add(cx+x,y+6,cz+z,Material.POLISHED_DEEPSLATE);if(Math.abs(x)==8||Math.abs(z)==8)for(int h=1;h<=5;h++)add(cx+x,y+h,cz+z,Material.POLISHED_DEEPSLATE);}add(cx,y+1,cz,Material.ENDER_CHEST);}
     private void portalDais(int cx,int y,int cz){for(int x=-6;x<=6;x++)for(int z=-6;z<=6;z++)if(x*x+z*z<=36)add(cx+x,y,cz+z,Material.POLISHED_BLACKSTONE_BRICKS);add(cx,y+1,cz,Material.LODESTONE);}
 
-    private void drain(){World w=primary();if(w==null)return;int n=0;while(n++<120&&!queue.isEmpty()){P p=queue.pollFirst();Block b=w.getBlockAt(p.x,p.y,p.z);if(replaceable(b.getType(),p.m))b.setType(p.m,false);}if(!queue.isEmpty())return;if(task!=-1){Bukkit.getScheduler().cancelTask(task);task=-1;}try{Files.writeString(marker.toPath(),"completed "+Instant.now()+"\n");}catch(Exception ignored){}db.audit(null,"royal_estate_complete","v1.3");Bukkit.broadcastMessage(ChatColor.GOLD+"[ImPuls] Королевская усадьба, сад, тюрьма и секретные тоннели подготовлены.");}
-    private boolean replaceable(Material old,Material target){if(target==Material.AIR)return old!=Material.BEDROCK;return old.isAir()||switch(old){case GRASS_BLOCK,DIRT,COARSE_DIRT,PODZOL,ROOTED_DIRT,STONE,DEEPSLATE,GRAVEL,SAND,CLAY,SHORT_GRASS,TALL_GRASS,FERN,LARGE_FERN,OAK_LEAVES,BIRCH_LEAVES,SPRUCE_LEAVES,DARK_OAK_LEAVES,CHERRY_LEAVES,PALE_OAK_LEAVES,WATER->true;default->false;};}
+    private void drain(){World w=primary();if(w==null)return;int n=0;while(n++<BATCH&&!queue.isEmpty()){P p=queue.pollFirst();Block b=w.getBlockAt(p.x,p.y,p.z);if(replaceable(b.getType(),p.m))b.setType(p.m,false);}if(!queue.isEmpty())return;if(task!=-1){Bukkit.getScheduler().cancelTask(task);task=-1;}try{Files.writeString(marker.toPath(),"completed "+Instant.now()+"\n");}catch(Exception ignored){}db.audit(null,"royal_estate_complete","v1.3");Bukkit.broadcastMessage(ChatColor.GOLD+"[ImPuls] Королевская усадьба, сад, тюрьма и секретные тоннели подготовлены.");}
+
+    private boolean replaceable(Material old,Material target){
+        if(target==Material.AIR)return naturalCarvable(old);
+        return old.isAir()||naturalCarvable(old);
+    }
+    private boolean naturalCarvable(Material m){return switch(m){
+        case GRASS_BLOCK,DIRT,COARSE_DIRT,PODZOL,ROOTED_DIRT,STONE,DEEPSLATE,TUFF,ANDESITE,DIORITE,GRANITE,
+                GRAVEL,SAND,RED_SAND,CLAY,SHORT_GRASS,TALL_GRASS,FERN,LARGE_FERN,OAK_LEAVES,BIRCH_LEAVES,
+                SPRUCE_LEAVES,JUNGLE_LEAVES,ACACIA_LEAVES,DARK_OAK_LEAVES,MANGROVE_LEAVES,CHERRY_LEAVES,
+                PALE_OAK_LEAVES,WATER -> true;
+        default -> false;
+    };}
     private void add(int x,int y,int z,Material m){queue.addLast(new P(x,y,z,m));}
     private Location safe(World w,int x,int z){int y=Math.max(w.getMinHeight()+2,w.getHighestBlockYAt(x,z)+1);return new Location(w,x+0.5,y,z+0.5);}
     private World primary(){for(World w:Bukkit.getWorlds())if(w.getEnvironment()==World.Environment.NORMAL)return w;return null;}
