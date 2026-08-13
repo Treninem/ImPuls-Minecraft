@@ -4,9 +4,12 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 /** Single bootstrap point for optional v1.3 subsystems so compiled features cannot remain dormant. */
 public final class ExtendedFeatureService {
+    private static boolean started;
     private ExtendedFeatureService() { }
 
-    public static void start(JavaPlugin plugin, Database db) {
+    public static synchronized void start(JavaPlugin plugin, Database db) {
+        if (started) return;
+        started = true;
         if (plugin.getConfig().getBoolean("features.duel-insurance-guard", true)) DuelInsuranceGuardService.start(plugin, db);
         if (plugin.getConfig().getBoolean("features.city-challenges", true)) CityChallengeService.start(plugin, db);
         if (plugin.getConfig().getBoolean("features.leaderboards", true)) LeaderboardDiagnosticsService.start(plugin);
