@@ -16,6 +16,7 @@ features:
   duels: true
   realm-expansion: true
   professions: true
+  guild-expansion: true
 
 economy:
   insurance-base-cost: 120
@@ -71,3 +72,7 @@ duel:
 professions:
   daily-activity-cap: 500
   daily-buyback-cap: 1000
+
+guild-base:
+  base-cost: 10000
+  expand-cost-per-block: 250
