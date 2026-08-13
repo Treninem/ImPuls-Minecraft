@@ -5,6 +5,13 @@ features:
   city-events: true
   world-expansion: true
   region-discovery: true
+  progression: true
+  transport: true
+  item-lifecycle: true
+  capital-expansion: true
+  city-protection: true
+  city-npcs: true
+  world-bosses: true
 
 economy:
   insurance-base-cost: 120
@@ -33,3 +40,17 @@ war:
   duration-minutes: 15
   treasury-capture-fraction: 0.10
   capture-cooldown-days: 7
+
+progression:
+  medallion-recovery-cost: 25
+
+transport:
+  spawn-delay-seconds: 5
+  carriage-delay-seconds: 3
+
+items:
+  ordinary-drop-lifetime-seconds: 86400
+
+world-boss:
+  interval-seconds: 10800
+  reward-coins: 750
