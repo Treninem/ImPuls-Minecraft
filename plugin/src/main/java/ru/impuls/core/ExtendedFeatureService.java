@@ -10,6 +10,7 @@ public final class ExtendedFeatureService {
     public static synchronized void start(JavaPlugin plugin, Database db) {
         if (started) return;
         started = true;
+        if (plugin.getConfig().getBoolean("features.help-menu", true)) HelpCommandService.start(plugin);
         if (plugin.getConfig().getBoolean("features.duel-insurance-guard", true)) DuelInsuranceGuardService.start(plugin, db);
         if (plugin.getConfig().getBoolean("features.city-challenges", true)) CityChallengeService.start(plugin, db);
         if (plugin.getConfig().getBoolean("features.leaderboards", true)) LeaderboardDiagnosticsService.start(plugin);
