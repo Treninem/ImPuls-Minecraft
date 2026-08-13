@@ -68,9 +68,13 @@ jobs:
           jar tf plugin/target/ImPulsCore-1.3.0.jar | grep -q 'ru/impuls/core/CityNpcService.class'
           jar tf plugin/target/ImPulsCore-1.3.0.jar | grep -q 'ru/impuls/core/WorldBossService.class'
           jar tf plugin/target/ImPulsCore-1.3.0.jar | grep -q 'ru/impuls/core/ItemLifecycleService.class'
+          jar tf plugin/target/ImPulsCore-1.3.0.jar | grep -q 'ru/impuls/core/MarketService.class'
+          jar tf plugin/target/ImPulsCore-1.3.0.jar | grep -q 'ru/impuls/core/ArenaMinigameService.class'
           unzip -p plugin/target/ImPulsCore-1.3.0.jar plugin.yml | grep -q "version: '1.3.0'"
           unzip -p plugin/target/ImPulsCore-1.3.0.jar config.yml | grep -q 'progression: true'
           unzip -p plugin/target/ImPulsCore-1.3.0.jar config.yml | grep -q 'city-protection: true'
+          unzip -p plugin/target/ImPulsCore-1.3.0.jar config.yml | grep -q 'market: true'
+          unzip -p plugin/target/ImPulsCore-1.3.0.jar config.yml | grep -q 'duels: true'
       - name: Assemble checksums
         run: |
           mkdir -p release
