@@ -45,12 +45,11 @@ jobs:
                   z.extractall(root)
               mcmeta = root / 'pack.mcmeta'
               data = json.loads(mcmeta.read_text(encoding='utf-8'))
-              data['pack']['description'] = 'ImPulsCore v1.3.0 — wall, 32 gates, waves, RPG progression and capital systems'
+              data['pack']['description'] = 'ImPulsCore v1.3.0 — wall, 32 gates, waves, RPG progression, capital and realms'
               mcmeta.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
               with zipfile.ZipFile(dst, 'w', zipfile.ZIP_DEFLATED) as z:
                   for p in sorted(root.rglob('*')):
-                      if p.is_file():
-                          z.write(p, p.relative_to(root))
+                      if p.is_file(): z.write(p, p.relative_to(root))
           with zipfile.ZipFile(dst) as z:
               assert z.testzip() is None
               assert 'pack.mcmeta' in z.namelist()
@@ -59,22 +58,15 @@ jobs:
         run: mvn -B -f plugin/pom.xml clean package
       - name: Verify v1.3 JAR and gameplay services
         run: |
-          test -s plugin/target/ImPulsCore-1.3.0.jar
-          jar tf plugin/target/ImPulsCore-1.3.0.jar | grep -q 'ru/impuls/core/ImPulsCoreV11Plugin.class'
-          jar tf plugin/target/ImPulsCore-1.3.0.jar | grep -q 'ru/impuls/core/ProgressionQuestService.class'
-          jar tf plugin/target/ImPulsCore-1.3.0.jar | grep -q 'ru/impuls/core/TransportService.class'
-          jar tf plugin/target/ImPulsCore-1.3.0.jar | grep -q 'ru/impuls/core/CapitalExpansionService.class'
-          jar tf plugin/target/ImPulsCore-1.3.0.jar | grep -q 'ru/impuls/core/CityProtectionService.class'
-          jar tf plugin/target/ImPulsCore-1.3.0.jar | grep -q 'ru/impuls/core/CityNpcService.class'
-          jar tf plugin/target/ImPulsCore-1.3.0.jar | grep -q 'ru/impuls/core/WorldBossService.class'
-          jar tf plugin/target/ImPulsCore-1.3.0.jar | grep -q 'ru/impuls/core/ItemLifecycleService.class'
-          jar tf plugin/target/ImPulsCore-1.3.0.jar | grep -q 'ru/impuls/core/MarketService.class'
-          jar tf plugin/target/ImPulsCore-1.3.0.jar | grep -q 'ru/impuls/core/ArenaMinigameService.class'
-          unzip -p plugin/target/ImPulsCore-1.3.0.jar plugin.yml | grep -q "version: '1.3.0'"
-          unzip -p plugin/target/ImPulsCore-1.3.0.jar config.yml | grep -q 'progression: true'
-          unzip -p plugin/target/ImPulsCore-1.3.0.jar config.yml | grep -q 'city-protection: true'
-          unzip -p plugin/target/ImPulsCore-1.3.0.jar config.yml | grep -q 'market: true'
-          unzip -p plugin/target/ImPulsCore-1.3.0.jar config.yml | grep -q 'duels: true'
+          JAR=plugin/target/ImPulsCore-1.3.0.jar
+          test -s "$JAR"
+          for CLASS in ImPulsCoreV11Plugin ProgressionQuestService TransportService CapitalExpansionService CityProtectionService CityNpcService WorldBossService ItemLifecycleService MarketService ArenaMinigameService RealmExpansionService ProfessionEconomyService GuildExpansionService; do
+            jar tf "$JAR" | grep -q "ru/impuls/core/${CLASS}.class"
+          done
+          unzip -p "$JAR" plugin.yml | grep -q "version: '1.3.0'"
+          for FLAG in progression city-protection market duels realm-expansion professions guild-expansion; do
+            unzip -p "$JAR" config.yml | grep -q "${FLAG}: true"
+          done
       - name: Assemble checksums
         run: |
           mkdir -p release
