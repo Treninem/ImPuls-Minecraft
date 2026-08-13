@@ -3,12 +3,14 @@ package ru.impuls.core;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerFishEvent;
@@ -29,10 +31,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Controlled server-side professions and resource buyback with daily caps.
- * Rewards real Survival activity, not item placement loops or Creative inventory.
- */
+/** Controlled professions and resource buyback with persistent anti-loop protection and daily caps. */
 public final class ProfessionEconomyService implements Listener, AutoCloseable {
     private final JavaPlugin plugin;
     private final Database db;
@@ -67,6 +66,7 @@ public final class ProfessionEconomyService implements Listener, AutoCloseable {
             s.execute("PRAGMA journal_mode=WAL");
             s.execute("PRAGMA busy_timeout=5000");
             s.execute("CREATE TABLE IF NOT EXISTS profession_daily(uuid TEXT NOT NULL,day INTEGER NOT NULL,earned INTEGER NOT NULL DEFAULT 0,sold INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(uuid,day))");
+            s.execute("CREATE TABLE IF NOT EXISTS profession_placed_blocks(world TEXT NOT NULL,x INTEGER NOT NULL,y INTEGER NOT NULL,z INTEGER NOT NULL,placed_by TEXT NOT NULL,placed_at INTEGER NOT NULL,PRIMARY KEY(world,x,y,z))");
         }
     }
 
@@ -80,10 +80,19 @@ public final class ProfessionEconomyService implements Listener, AutoCloseable {
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+    public void onPlace(BlockPlaceEvent event) {
+        if (!BREAK_REWARD.containsKey(event.getBlockPlaced().getType())) return;
+        Block b = event.getBlockPlaced();
+        update("INSERT INTO profession_placed_blocks(world,x,y,z,placed_by,placed_at) VALUES(?,?,?,?,?,?) ON CONFLICT(world,x,y,z) DO UPDATE SET placed_by=excluded.placed_by,placed_at=excluded.placed_at",
+                b.getWorld().getName(), b.getX(), b.getY(), b.getZ(), event.getPlayer().getUniqueId().toString(), Instant.now().getEpochSecond());
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onBreak(BlockBreakEvent event) {
         if (event.getPlayer().getGameMode() != org.bukkit.GameMode.SURVIVAL) return;
         Integer reward = BREAK_REWARD.get(event.getBlock().getType());
         if (reward == null) return;
+        if (consumePlayerPlaced(event.getBlock())) return;
         rewardActivity(event.getPlayer(), reward, "profession_mining");
     }
 
@@ -91,7 +100,6 @@ public final class ProfessionEconomyService implements Listener, AutoCloseable {
     public void onDeath(EntityDeathEvent event) {
         Player killer = event.getEntity().getKiller();
         if (killer == null || !(event.getEntity() instanceof Monster) || killer.getGameMode() != org.bukkit.GameMode.SURVIVAL) return;
-        // Scripted dungeon/wave bosses already have dedicated rewards; do not double-pay them here.
         if (event.getEntity().getScoreboardTags().stream().anyMatch(t -> t.startsWith("impuls_"))) return;
         rewardActivity(killer, 2, "profession_hunting");
     }
@@ -114,7 +122,7 @@ public final class ProfessionEconomyService implements Listener, AutoCloseable {
             int cap = plugin.getConfig().getInt("professions.daily-activity-cap", 500);
             int saleCap = plugin.getConfig().getInt("professions.daily-buyback-cap", 1000);
             player.sendMessage(ChatColor.GOLD + "Работы ImPuls: " + ChatColor.GRAY + "сегодня заработано за активность " + daily.earned + "/" + cap + ", продажа серверу " + daily.sold + "/" + saleCap + ".");
-            player.sendMessage(ChatColor.GRAY + "Профессии определяются естественно: шахтёр/лесоруб, охотник и рыбак. /impuls sellserver <amount> — продать предмет из основной руки.");
+            player.sendMessage(ChatColor.GRAY + "Профессии: шахтёр/лесоруб, охотник и рыбак. Поставленные игроками руды/брёвна повторной награды не дают.");
             return;
         }
         if (args.length < 3) {
@@ -122,6 +130,19 @@ public final class ProfessionEconomyService implements Listener, AutoCloseable {
             return;
         }
         sellServer(player, args[2]);
+    }
+
+    private boolean consumePlayerPlaced(Block block) {
+        try (PreparedStatement ps = connection.prepareStatement("DELETE FROM profession_placed_blocks WHERE world=? AND x=? AND y=? AND z=?")) {
+            ps.setString(1, block.getWorld().getName());
+            ps.setInt(2, block.getX());
+            ps.setInt(3, block.getY());
+            ps.setInt(4, block.getZ());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            plugin.getLogger().warning("Profession placed-block check failed: " + e.getMessage());
+            return true; // fail closed: no money if anti-loop persistence is unavailable
+        }
     }
 
     private void rewardActivity(Player player, int amount, String reason) {
@@ -158,13 +179,14 @@ public final class ProfessionEconomyService implements Listener, AutoCloseable {
         }
         int accepted = Math.max(1, Math.min(amount, payout / unit));
         payout = accepted * unit;
+        Material soldType = hand.getType();
         hand.setAmount(hand.getAmount() - accepted);
         player.getInventory().setItemInMainHand(hand.getAmount() <= 0 ? new ItemStack(Material.AIR) : hand);
         ensureDay(player.getUniqueId());
         update("UPDATE profession_daily SET sold=sold+? WHERE uuid=? AND day=?", payout, player.getUniqueId().toString(), day());
-        db.credit(player.getUniqueId(), payout, "server_buyback:" + hand.getType().name());
-        db.audit(player.getUniqueId(), "server_buyback", hand.getType().name() + ":" + accepted + ":" + payout);
-        player.sendMessage(ChatColor.GREEN + "Сервер купил " + accepted + " × " + hand.getType().name() + " за " + payout + " монет.");
+        db.credit(player.getUniqueId(), payout, "server_buyback:" + soldType.name());
+        db.audit(player.getUniqueId(), "server_buyback", soldType.name() + ":" + accepted + ":" + payout);
+        player.sendMessage(ChatColor.GREEN + "Сервер купил " + accepted + " × " + soldType.name() + " за " + payout + " монет.");
     }
 
     private record Daily(int earned, int sold) { }
