@@ -12,14 +12,12 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-/** Prevents the ordinary-world one-death insurance from being consumed by safe minigame deaths. */
+/** Prevents ordinary-world one-death insurance from being consumed by safe minigame deaths. */
 public final class DuelInsuranceGuardService implements Listener {
     private final Database db;
     private final Set<UUID> restoreInsurance = new HashSet<>();
 
-    private DuelInsuranceGuardService(Database db) {
-        this.db = db;
-    }
+    private DuelInsuranceGuardService(Database db) { this.db = db; }
 
     public static void start(JavaPlugin plugin, Database db) {
         Bukkit.getPluginManager().registerEvents(new DuelInsuranceGuardService(db), plugin);
@@ -28,7 +26,8 @@ public final class DuelInsuranceGuardService implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void beforeCoreDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
-        if (!player.getScoreboardTags().contains("impuls_duel")) return;
+        if (!player.getScoreboardTags().contains("impuls_duel")
+                && !player.getScoreboardTags().contains("impuls_safe_game")) return;
         UUID uuid = player.getUniqueId();
         if (!db.insured(uuid)) return;
         restoreInsurance.add(uuid);
