@@ -12,6 +12,8 @@ features:
   city-protection: true
   city-npcs: true
   world-bosses: true
+  market: true
+  duels: true
 
 economy:
   insurance-base-cost: 120
@@ -54,3 +56,12 @@ items:
 world-boss:
   interval-seconds: 10800
   reward-coins: 750
+
+market:
+  listing-fee: 0.05
+  daily-listing-limit: 20
+  max-price: 1000000
+
+duel:
+  reward-coins: 60
+  pair-reward-cooldown-seconds: 3600
